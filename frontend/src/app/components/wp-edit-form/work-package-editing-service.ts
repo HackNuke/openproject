@@ -28,13 +28,13 @@
 
 import {WorkPackageResource} from 'core-app/modules/hal/resources/work-package-resource';
 import {WorkPackageEditContext} from './work-package-edit-context';
-import {WorkPackageChangeset} from './work-package-changeset';
+import {ChangesetEvents, WorkPackageChangeset} from './work-package-changeset';
 import {combine, deriveRaw, multiInput, MultiInputState, State, StatesGroup} from 'reactivestates';
 import {map} from 'rxjs/operators';
 import {StateCacheService} from '../states/state-cache.service';
 import {WorkPackageCacheService} from '../work-packages/work-package-cache.service';
 import {Injectable, Injector} from '@angular/core';
-import {IWorkPackageEditingService} from "core-components/wp-edit-form/work-package-editing.service.interface";
+import {WorkPackagesActivityService} from "core-components/wp-single-view-tabs/activity-panel/wp-activity.service";
 
 class WPChangesetStates extends StatesGroup {
   name = 'WP-Changesets';
@@ -48,30 +48,33 @@ class WPChangesetStates extends StatesGroup {
 }
 
 @Injectable()
-export class WorkPackageEditingService extends StateCacheService<WorkPackageChangeset> implements IWorkPackageEditingService {
+export class WorkPackageEditingService extends StateCacheService<WorkPackageChangeset> {
 
   private stateGroup:WPChangesetStates;
 
   constructor(readonly injector:Injector,
+              readonly wpActivity:WorkPackagesActivityService,
               readonly wpCacheService:WorkPackageCacheService) {
     super();
     this.stateGroup = new WPChangesetStates();
   }
 
+
   /**
    * Start or continue editing the work package with a given edit context
-   * @param {string} workPackageId
-   * @param {WorkPackageEditContext} editContext
-   * @param {boolean} editAll
+   * @param {workPackage} Work package to edit
+   * @param {events} Events on the changeset to listen to
    * @return {WorkPackageChangeset} changeset or null if the associated work package id does not exist
    */
-  public changesetFor(oldReference:WorkPackageResource):WorkPackageChangeset {
-    const wpId = oldReference.id;
-    const workPackage = this.wpCacheService.state(wpId).getValueOr(oldReference);
-    const state = this.multiState.get(wpId);
+  public changesetFor(workPackage:WorkPackageResource, events:Partial<ChangesetEvents> = {}):WorkPackageChangeset {
+    const state = this.multiState.get(workPackage.id);
 
     if (state.isPristine()) {
-      state.putValue(new WorkPackageChangeset(this.injector, workPackage));
+      state.putValue(new WorkPackageChangeset(this.injector, workPackage, {
+        onSaved: this.onSaved.bind(this),
+        onUpdated: (changeset) =>  this.updateValue(changeset.workPackage.id, changeset),
+        ...events,
+      }));
     }
 
     const changeset = state.value!;
@@ -110,9 +113,9 @@ export class WorkPackageEditingService extends StateCacheService<WorkPackageChan
   }
 
   public stopEditing(workPackageId:string) {
-    const state = this.multiState.get(workPackageId);
-    if (state && state.value) {
-      state.value.clear();
+    const changeset:WorkPackageChangeset|undefined = this.multiState.get(workPackageId).value;
+    if (changeset !== undefined) {
+      changeset.clear();
     }
   }
 
@@ -121,6 +124,17 @@ export class WorkPackageEditingService extends StateCacheService<WorkPackageChan
       .then((wp:WorkPackageResource) => {
         return new WorkPackageChangeset(this.injector, wp);
       });
+  }
+
+  protected onSaved(changeset:WorkPackageChangeset) {
+    const workPackage = changeset.workPackage;
+    this.wpActivity.clear(workPackage.id);
+
+    // If there is a parent, its view has to be updated as well
+    if (changeset.workPackage.parent) {
+      this.wpCacheService.loadWorkPackage(workPackage.parent.id.toString(), true);
+    }
+    this.wpCacheService.updateWorkPackage(workPackage);
   }
 
   protected loadAll(ids:string[]) {

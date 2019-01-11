@@ -26,7 +26,7 @@
 // See doc/COPYRIGHT.rdoc for more details.
 // ++
 
-import {Injectable, Injector, Inject} from '@angular/core';
+import {Injectable, Injector} from '@angular/core';
 import {ApiWorkPackagesService} from '../api/api-work-packages/api-work-packages.service';
 import {HalResource} from 'core-app/modules/hal/resources/hal-resource';
 import {WorkPackageCacheService} from '../work-packages/work-package-cache.service';
@@ -34,16 +34,13 @@ import {Observable, Subject} from 'rxjs';
 import {WorkPackageChangeset} from '../wp-edit-form/work-package-changeset';
 import {WorkPackageResource} from 'core-app/modules/hal/resources/work-package-resource';
 import {HalResourceService} from 'core-app/modules/hal/services/hal-resource.service';
-import {IWorkPackageCreateService} from "core-components/wp-new/wp-create.service.interface";
 import {HookService} from 'core-app/modules/plugins/hook-service';
 import {WorkPackageFilterValues} from "core-components/wp-edit-form/work-package-filter-values";
-import {IWorkPackageEditingServiceToken} from "core-components/wp-edit-form/work-package-editing.service.interface";
 import {WorkPackageEditingService} from "core-components/wp-edit-form/work-package-editing-service";
-import {WorkPackageTableFiltersService} from "core-components/wp-fast-table/state/wp-table-filters.service";
 import {TableState} from "core-components/wp-table/table-state/table-state";
 
 @Injectable()
-export class WorkPackageCreateService implements IWorkPackageCreateService {
+export class WorkPackageCreateService {
   protected form:Promise<HalResource>|undefined;
 
   // Allow callbacks to happen on newly created work packages
@@ -53,8 +50,8 @@ export class WorkPackageCreateService implements IWorkPackageCreateService {
               protected hooks:HookService,
               protected wpCacheService:WorkPackageCacheService,
               protected halResourceService:HalResourceService,
-              @Inject(IWorkPackageEditingServiceToken) protected readonly wpEditing:WorkPackageEditingService,
-              protected readonly tableState:TableState,
+              protected wpEditing:WorkPackageEditingService,
+              protected tableState:TableState,
               protected apiWorkPackages:ApiWorkPackagesService) {
   }
 
@@ -83,7 +80,10 @@ export class WorkPackageCreateService implements IWorkPackageCreateService {
     let wp = this.halResourceService.createHalResourceOfType<WorkPackageResource>('WorkPackage', form.payload.$plain());
     wp.initializeNewResource(form);
 
-    const changeset = new WorkPackageChangeset(this.injector, wp, form);
+    const changeset = this.createChangeset(wp);
+
+    // Keep the form to avoid loading again
+    changeset.form = form;
 
     // Call work package initialization hook
     this.hooks.call('workPackageNewInitialization', changeset);
@@ -104,7 +104,11 @@ export class WorkPackageCreateService implements IWorkPackageCreateService {
 
     wp.initializeNewResource(form);
 
-    return new WorkPackageChangeset(this.injector, wp, form);
+    const changeset = this.wpEditing.changesetFor(wp);
+
+    // Keep the form to avoid loading again
+    changeset.form = form;
+    return changeset;
   }
 
   public copyWorkPackage(copyFromForm:any, projectIdentifier?:string) {
@@ -147,6 +151,16 @@ export class WorkPackageCreateService implements IWorkPackageCreateService {
       this.wpCacheService.updateWorkPackage(changeset.workPackage);
 
       return changeset;
+    });
+  }
+
+  /**
+   * Create a changeset that correctly wires to create events by this service.
+   * @param wp
+   */
+  protected createChangeset(wp:WorkPackageResource) {
+    return this.wpEditing.changesetFor(wp, {
+      onSavedNew: (changeset) => this.newWorkPackageCreated(changeset.workPackage)
     });
   }
 

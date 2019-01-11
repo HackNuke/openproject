@@ -5,11 +5,10 @@ import {TableRowEditContext} from '../wp-edit-form/table-row-edit-context';
 import {WorkPackageEditForm} from '../wp-edit-form/work-package-edit-form';
 import {WorkPackageEditingService} from '../wp-edit-form/work-package-editing-service';
 import {WorkPackageTable} from 'core-components/wp-fast-table/wp-fast-table';
-import {IWorkPackageEditingServiceToken} from "../wp-edit-form/work-package-editing.service.interface";
 
 export class WorkPackageTableEditingContext {
 
-  public wpEditing:WorkPackageEditingService = this.injector.get<WorkPackageEditingService>(IWorkPackageEditingServiceToken);
+  public wpEditing:WorkPackageEditingService = this.injector.get(WorkPackageEditingService);
 
   constructor(readonly table:WorkPackageTable,
               readonly injector:Injector) {

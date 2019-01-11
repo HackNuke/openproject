@@ -38,8 +38,8 @@ import {WorkPackageTableRefreshService} from '../wp-table/wp-table-refresh-reque
 import {WorkPackageChangeset} from './work-package-changeset';
 import {WorkPackageEditContext} from './work-package-edit-context';
 import {WorkPackageEditFieldHandler} from './work-package-edit-field-handler';
-import {IWorkPackageEditingServiceToken} from "core-components/wp-edit-form/work-package-editing.service.interface";
 import {IFieldSchema} from "core-app/modules/fields/field.base";
+import {WorkPackageEditingService} from "core-components/wp-edit-form/work-package-editing-service";
 
 export const activeFieldContainerClassName = 'wp-inline-edit--active-field';
 export const activeFieldClassName = 'wp-inline-edit--field';
@@ -48,7 +48,7 @@ export class WorkPackageEditForm {
   // Injections
   public states:States = this.injector.get(States);
   public wpCacheService = this.injector.get(WorkPackageCacheService);
-  public wpEditing = this.injector.get(IWorkPackageEditingServiceToken);
+  public wpEditing = this.injector.get(WorkPackageEditingService);
   public wpTableRefresh = this.injector.get(WorkPackageTableRefreshService);
   public wpNotificationsService = this.injector.get(WorkPackageNotificationService);
 

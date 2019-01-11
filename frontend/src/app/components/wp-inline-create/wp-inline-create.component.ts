@@ -26,17 +26,7 @@
 // See doc/COPYRIGHT.rdoc for more details.
 // ++
 
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  Inject,
-  Injector,
-  Input,
-  OnChanges,
-  OnDestroy,
-  OnInit
-} from '@angular/core';
+import {Component, ElementRef, HostListener, Injector, Input, OnChanges, OnDestroy, OnInit} from '@angular/core';
 import {AuthorisationService} from 'core-app/modules/common/model-auth/model-auth.service';
 import {WorkPackageTableFocusService} from 'core-components/wp-fast-table/state/wp-table-focus.service';
 import {filter} from 'rxjs/operators';
@@ -57,7 +47,6 @@ import {TableState} from 'core-components/wp-table/table-state/table-state';
 import {untilComponentDestroyed} from 'ng2-rx-componentdestroyed';
 import {I18nService} from 'core-app/modules/common/i18n/i18n.service';
 import {FocusHelperService} from 'core-app/modules/common/focus/focus-helper';
-import {IWorkPackageCreateServiceToken} from "core-components/wp-new/wp-create.service.interface";
 import {CurrentUserService} from "core-components/user/current-user.service";
 import {WorkPackageInlineCreateService} from "core-components/wp-inline-create/wp-inline-create.service";
 import {Subscription} from 'rxjs';
@@ -97,7 +86,7 @@ export class WorkPackageInlineCreateComponent implements OnInit, OnChanges, OnDe
               protected readonly I18n:I18nService,
               protected readonly tableState:TableState,
               protected readonly currentUser:CurrentUserService,
-              @Inject(IWorkPackageCreateServiceToken) protected readonly wpCreate:WorkPackageCreateService,
+              protected readonly wpCreate:WorkPackageCreateService,
               protected readonly wpInlineCreate:WorkPackageInlineCreateService,
               protected readonly wpTableColumns:WorkPackageTableColumnsService,
               protected readonly wpTableFocus:WorkPackageTableFocusService,

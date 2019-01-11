@@ -41,7 +41,6 @@ import {input, InputState} from 'reactivestates';
 import {DisplayFieldService} from 'core-app/modules/fields/display/display-field.service';
 import {DisplayField} from 'core-app/modules/fields/display/display-field.module';
 import {QueryResource} from 'core-app/modules/hal/resources/query-resource';
-import {IWorkPackageEditingServiceToken} from '../../wp-edit-form/work-package-editing.service.interface';
 import {DynamicCssService} from '../../../modules/common/dynamic-css/dynamic-css.service';
 import {HookService} from 'core-app/modules/plugins/hook-service';
 
@@ -117,7 +116,7 @@ export class WorkPackageSingleViewComponent implements OnInit, OnDestroy {
               protected PathHelper:PathHelperService,
               protected states:States,
               protected dynamicCssService:DynamicCssService,
-              @Inject(IWorkPackageEditingServiceToken) protected wpEditing:WorkPackageEditingService,
+              protected wpEditing:WorkPackageEditingService,
               protected displayFieldService:DisplayFieldService,
               protected wpCacheService:WorkPackageCacheService,
               protected hook:HookService) {

@@ -28,33 +28,37 @@
 
 import {debugLog} from '../../helpers/debug_output';
 import {SchemaCacheService} from '../schemas/schema-cache.service';
-import {WorkPackageCacheService} from '../work-packages/work-package-cache.service';
-import {WorkPackageNotificationService} from '../wp-edit/wp-notification.service';
 import {Injector} from '@angular/core';
 import {WorkPackageResource} from 'core-app/modules/hal/resources/work-package-resource';
 import {FormResource} from 'core-app/modules/hal/resources/form-resource';
 import {HalResourceService} from 'core-app/modules/hal/services/hal-resource.service';
-import {WorkPackagesActivityService} from 'core-components/wp-single-view-tabs/activity-panel/wp-activity.service';
-import {
-  IWorkPackageCreateService,
-  IWorkPackageCreateServiceToken
-} from "core-components/wp-new/wp-create.service.interface";
-import {
-  IWorkPackageEditingService,
-  IWorkPackageEditingServiceToken
-} from "core-components/wp-edit-form/work-package-editing.service.interface";
 import {HalResource} from "core-app/modules/hal/resources/hal-resource";
 import {IFieldSchema} from "core-app/modules/fields/field.base";
 import {SchemaResource} from 'core-app/modules/hal/resources/schema-resource';
 
+export interface ChangesetEvents {
+  /**
+   * An event callback fired when the inner work package was rebuilt from the changeset.
+   * @param changeset
+   */
+  onUpdated:(changeset:WorkPackageChangeset) => void;
+
+  /**
+   * An event callback fired when the changeset was saved.
+   * @param changeset
+   * @param wasNew
+   */
+  onSaved:(changeset:WorkPackageChangeset) => void;
+
+  /**
+   * An event callback fired when the changeset results in WP creation.
+   */
+  onSavedNew:(changeset:WorkPackageChangeset) => void;
+}
+
 export class WorkPackageChangeset {
   // Injections
-  public wpNotificationsService:WorkPackageNotificationService = this.injector.get(WorkPackageNotificationService);
   public schemaCacheService:SchemaCacheService = this.injector.get(SchemaCacheService);
-  public wpCacheService:WorkPackageCacheService = this.injector.get(WorkPackageCacheService);
-  public wpCreate:IWorkPackageCreateService = this.injector.get(IWorkPackageCreateServiceToken);
-  public wpEditing:IWorkPackageEditingService = this.injector.get(IWorkPackageEditingServiceToken);
-  public wpActivity:WorkPackagesActivityService = this.injector.get(WorkPackagesActivityService);
   public halResourceService:HalResourceService = this.injector.get(HalResourceService);
 
   // The changeset to be applied to the work package
@@ -67,10 +71,10 @@ export class WorkPackageChangeset {
   // The current editing resource
   public resource:WorkPackageResource|null;
 
+  // Event called when saving this changeset
   constructor(readonly injector:Injector,
               public workPackage:WorkPackageResource,
-              form?:FormResource) {
-    this.form = form || null;
+              public events:Partial<ChangesetEvents> = {}) {
   }
 
   public reset(key:string) {
@@ -194,17 +198,12 @@ export class WorkPackageChangeset {
                 this.workPackage = savedWp;
 
                 if (wasNew) {
+                  this.callEvent('onSavedNew', this);
                   this.workPackage.overriddenSchema = undefined;
-                  this.wpCreate.newWorkPackageCreated(this.workPackage);
                 }
 
-                this.wpActivity.clear(this.workPackage.id);
+                this.callEvent('onSaved', this);
 
-                // If there is a parent, its view has to be updated as well
-                if (this.workPackage.parent) {
-                  this.wpCacheService.loadWorkPackage(this.workPackage.parent.id.toString(), true);
-                }
-                this.wpCacheService.updateWorkPackage(this.workPackage);
                 this.resource = null;
                 this.clear();
                 resolve(this.workPackage);
@@ -293,6 +292,19 @@ export class WorkPackageChangeset {
   }
 
   /**
+   * Calls the event callback if it was given.
+   * @param name Event name
+   * @param args Args to event function
+   */
+  private callEvent(name:keyof(ChangesetEvents), ...args:any[]) {
+    const event:Function|undefined = this.events[name];
+
+    if (event) {
+      event(...args);
+    }
+  }
+
+  /**
    * Extract the link(s) in the given changed value
    */
   private getLinkedValue(val:any, fieldSchema:IFieldSchema) {
@@ -350,7 +362,7 @@ export class WorkPackageChangeset {
   private buildResource() {
     if (this.empty) {
       this.resource = null;
-      this.wpEditing.updateValue(this.workPackage.id, this);
+      this.callEvent('onUpdated', this);
       return;
     }
 
@@ -360,6 +372,6 @@ export class WorkPackageChangeset {
 
     resource.overriddenSchema = this.schema;
     this.resource = (resource as WorkPackageResource);
-    this.wpEditing.updateValue(this.workPackage.id, this);
+    this.callEvent('onUpdated', this);
   }
 }

@@ -36,7 +36,6 @@ import {WorkPackageNotificationService} from "core-components/wp-edit/wp-notific
 import {WorkPackageResource} from "core-app/modules/hal/resources/work-package-resource";
 import {HalResource} from 'core-app/modules/hal/resources/hal-resource';
 import {CollectionResource} from 'core-app/modules/hal/resources/collection-resource';
-import {IWorkPackageEditingServiceToken} from "../../wp-edit-form/work-package-editing.service.interface";
 import {Highlighting} from "core-components/wp-fast-table/builders/highlighting/highlighting.functions";
 import {I18nService} from "core-app/modules/common/i18n/i18n.service";
 
@@ -50,7 +49,7 @@ export class WorkPackageStatusDropdownDirective extends OpContextMenuTrigger {
               readonly opContextMenu:OPContextMenuService,
               readonly $state:StateService,
               protected wpNotificationsService:WorkPackageNotificationService,
-              @Inject(IWorkPackageEditingServiceToken) protected wpEditing:WorkPackageEditingService,
+              protected wpEditing:WorkPackageEditingService,
               protected I18n:I18nService,
               protected wpTableRefresh:WorkPackageTableRefreshService) {
 

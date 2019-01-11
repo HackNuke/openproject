@@ -42,7 +42,6 @@ import {takeUntil} from 'rxjs/operators';
 import {RootDmService} from 'core-app/modules/hal/dm-services/root-dm.service';
 import {OpTitleService} from 'core-components/html/op-title.service';
 import {I18nService} from "core-app/modules/common/i18n/i18n.service";
-import {IWorkPackageCreateServiceToken} from "core-components/wp-new/wp-create.service.interface";
 import {CurrentUserService} from "core-app/components/user/current-user.service";
 
 
@@ -66,7 +65,7 @@ export class WorkPackageCreateController implements OnInit, OnDestroy {
               readonly currentUser:CurrentUserService,
               protected wpNotificationsService:WorkPackageNotificationService,
               protected states:States,
-              @Inject(IWorkPackageCreateServiceToken) protected wpCreate:WorkPackageCreateService,
+              protected wpCreate:WorkPackageCreateService,
               protected wpTableFilters:WorkPackageTableFiltersService,
               protected wpCacheService:WorkPackageCacheService,
               protected pathHelper:PathHelperService,

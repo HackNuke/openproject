@@ -38,7 +38,6 @@ import {
 } from "@angular/core";
 import {EditFieldHandler} from "core-app/modules/fields/edit/editing-portal/edit-field-handler";
 import {I18nService} from "core-app/modules/common/i18n/i18n.service";
-import {IWorkPackageEditingServiceToken} from "core-components/wp-edit-form/work-package-editing.service.interface";
 import {WorkPackageEditingService} from "core-components/wp-edit-form/work-package-editing-service";
 import {untilComponentDestroyed} from "ng2-rx-componentdestroyed";
 import {Field, IFieldSchema} from "core-app/modules/fields/field.base";
@@ -58,7 +57,7 @@ export class EditFieldComponent extends Field implements OnDestroy {
 
   constructor(readonly I18n:I18nService,
               readonly elementRef:ElementRef,
-              @Inject(IWorkPackageEditingServiceToken) protected wpEditing:WorkPackageEditingService,
+              readonly wpEditing:WorkPackageEditingService,
               @Inject(OpEditingPortalChangesetToken) protected changeset:WorkPackageChangeset,
               @Inject(OpEditingPortalSchemaToken) public schema:IFieldSchema,
               @Inject(OpEditingPortalHandlerToken) readonly handler:EditFieldHandler,
